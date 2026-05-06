@@ -1,0 +1,10 @@
+tt_content.texteladen_text =< lib.contentElement
+tt_content.texteladen_text {
+  templateName = Texteladen
+  templateRootPaths {
+    200 = EXT:texteladen/Resources/Private/Templates/
+  }
+  dataProcessing {
+    10 = Undnu\Texteladen\DataProcessing\TexteladenProcessor
+  }
+}

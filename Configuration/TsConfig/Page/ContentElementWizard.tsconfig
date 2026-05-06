@@ -1,0 +1,14 @@
+mod.wizards.newContentElement.wizardItems.common {
+  elements {
+    texteladen_text {
+      iconIdentifier = content-texteladen
+      title = LLL:EXT:texteladen/Resources/Private/Language/locallang_db.xlf:tt_content.CType.texteladen_text
+      description = LLL:EXT:texteladen/Resources/Private/Language/locallang_db.xlf:tt_content.CType.texteladen_text.description
+      tt_content_defValues {
+        CType = texteladen_text
+      }
+    }
+  }
+  show := addToList(texteladen_text)
+}
+

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+  <file source-language="en" datatype="plaintext" original="messages" date="2026-05-06T00:00:00Z">
+    <header/>
+    <body>
+      <trans-unit id="tt_content.CType.texteladen_text">
+        <source>Texteladen</source>
+        <target>Texteladen</target>
+      </trans-unit>
+      <trans-unit id="tt_content.CType.texteladen_text.description">
+        <source>Load .md/.txt files from a folder, filter by #tag, paginate by words</source>
+        <target>.md/.txt aus Ordner laden, nach #Tag filtern, nach Wörtern paginieren</target>
+      </trans-unit>
+
+      <trans-unit id="tabs.settings">
+        <source>Settings</source>
+        <target>Einstellungen</target>
+      </trans-unit>
+
+      <trans-unit id="tt_content.tx_texteladen_folder">
+        <source>Folder</source>
+        <target>Verzeichnis</target>
+      </trans-unit>
+      <trans-unit id="tt_content.tx_texteladen_tag">
+        <source>Tag</source>
+        <target>Tag</target>
+      </trans-unit>
+      <trans-unit id="tt_content.tx_texteladen_words_per_page">
+        <source>Words per page</source>
+        <target>Wörter pro Seite</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
+

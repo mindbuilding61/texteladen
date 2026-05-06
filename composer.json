@@ -1,0 +1,20 @@
+{
+  "name": "undnu/texteladen",
+  "type": "typo3-cms-extension",
+  "description": "Content-Element: Markdown/TXT aus fileadmin-Ordnern nach #Tag filtern und nach Wörtern paginieren",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "typo3/cms-core": "^13.4",
+    "league/commonmark": "^2.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Undnu\\Texteladen\\": "Classes/"
+    }
+  },
+  "extra": {
+    "typo3/cms": {
+      "extension-key": "texteladen"
+    }
+  }
+}
