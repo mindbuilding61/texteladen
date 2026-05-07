@@ -1,50 +1,53 @@
 <html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<f:layout name="Default" />
 
-<div id="c{data.uid}" class="frame frame-type-{data.CType} frame-layout-{data.layout} texteladen">
-    <div class="texteladen__content">
-        <f:format.raw>{contentHtml}</f:format.raw>
-        <f:if condition="{debugFallback}">
-            <f:format.raw>{debugFallback}</f:format.raw>
-        </f:if>
-    </div>
+<f:section name="Main">
+    <div class="texteladen">
+        <div class="texteladen__content">
+            <f:format.raw>{contentHtml}</f:format.raw>
+            <f:if condition="{debugFallback}">
+                <f:format.raw>{debugFallback}</f:format.raw>
+            </f:if>
+        </div>
 
-    <f:if condition="{debug}">
-        <pre class="texteladen__debug" style="margin-top:12px;padding:12px;border:1px dashed #999;white-space:pre-wrap;">
+        <f:if condition="{debug}">
+            <pre class="texteladen__debug" style="margin-top:12px;padding:12px;border:1px dashed #999;white-space:pre-wrap;">
 Debug (Texteladen)
 folderIdentifier: {debugFolderIdentifier}
 tagNeedle: {debugTagNeedle}
 totalFilesInFolder: {debugStats.totalFiles}
 matchedFiles: <f:for each="{debugStats.matchedFiles}" as="f" iteration="i"><f:if condition="{i.index}">, </f:if>{f}</f:for>
-        </pre>
-    </f:if>
+            </pre>
+        </f:if>
 
-    <f:if condition="{pagination.totalPages} > 1">
-        <nav class="texteladen__pagination" aria-label="Texteladen Pagination">
-            <f:if condition="{pagination.hasPrevious}">
-                <f:link.page
-                    class="texteladen__prev"
-                    noCache="1"
-                    additionalParams="{tx_texteladen: {ce: data.uid, page: pagination.previousPage}}"
-                >
-                    « Zurück
-                </f:link.page>
-            </f:if>
+        <f:if condition="{pagination.totalPages} > 1">
+            <nav class="texteladen__pagination" aria-label="Texteladen Pagination">
+                <f:if condition="{pagination.hasPrevious}">
+                    <f:link.page
+                        class="texteladen__prev"
+                        noCache="1"
+                        additionalParams="{tx_texteladen: {ce: data.uid, page: pagination.previousPage}}"
+                    >
+                        « Zurück
+                    </f:link.page>
+                </f:if>
 
-            <span class="texteladen__pages">
-                Seite {pagination.currentPage} / {pagination.totalPages}
-            </span>
+                <span class="texteladen__pages">
+                    Seite {pagination.currentPage} / {pagination.totalPages}
+                </span>
 
-            <f:if condition="{pagination.hasNext}">
-                <f:link.page
-                    class="texteladen__next"
-                    noCache="1"
-                    additionalParams="{tx_texteladen: {ce: data.uid, page: pagination.nextPage}}"
-                >
-                    Weiter »
-                </f:link.page>
-            </f:if>
-        </nav>
-    </f:if>
-</div>
+                <f:if condition="{pagination.hasNext}">
+                    <f:link.page
+                        class="texteladen__next"
+                        noCache="1"
+                        additionalParams="{tx_texteladen: {ce: data.uid, page: pagination.nextPage}}"
+                    >
+                        Weiter »
+                    </f:link.page>
+                </f:if>
+            </nav>
+        </f:if>
+    </div>
+</f:section>
 
 </html>
