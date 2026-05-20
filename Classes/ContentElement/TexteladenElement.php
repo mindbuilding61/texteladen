@@ -60,6 +60,10 @@ final class TexteladenElement
 
             $currentPage = $this->resolveCurrentPage($request, $ceUid);
 
+            if ($this->shouldRenderAsProse($combinedMarkdown)) {
+                $combinedMarkdown = $this->prepareProseSource($combinedMarkdown);
+            }
+
             [$pageMarkdown, $pagination] = $this->paginateByWords($combinedMarkdown, $wordsPerPage, $currentPage);
 
             $contentHtml = $this->renderMarkdownToHtml($pageMarkdown);
@@ -306,8 +310,73 @@ final class TexteladenElement
         ]];
     }
 
+    /**
+     * Manuskript-Texte (eingerückte Zeilen, Kapitelzeilen) nicht als Markdown parsen.
+     */
+    private function shouldRenderAsProse(string $text): bool
+    {
+        if (preg_match('/^\s{2,}\S/m', $text)) {
+            return true;
+        }
+
+        return !preg_match('/^#{1,6}\s+\S/m', $text)
+            && !preg_match('/\[[^\]]+\]\([^)]+\)/', $text);
+    }
+
+    /**
+     * Entfernt typische Manuskript-Einzüge und normalisiert Zeilenumbrüche.
+     */
+    private function prepareProseSource(string $text): string
+    {
+        $text = str_replace(["\r\n", "\r"], "\n", $text);
+        $lines = explode("\n", $text);
+        $normalized = [];
+        foreach ($lines as $line) {
+            $normalized[] = rtrim((string)preg_replace('/^\s{1,8}/', '', $line));
+        }
+
+        return implode("\n", $normalized);
+    }
+
+    private function renderProseToHtml(string $text): string
+    {
+        $html = [];
+        foreach (explode("\n", $text) as $line) {
+            if ($line === '') {
+                continue;
+            }
+
+            if ($line === '---') {
+                $html[] = '<hr>';
+                continue;
+            }
+
+            if (preg_match('/^#{1,6}\s*(.+)$/u', $line, $matches)) {
+                $html[] = '<p class="texteladen__tag">' . htmlspecialchars(
+                    (string)$matches[1],
+                    ENT_QUOTES | ENT_SUBSTITUTE,
+                    'UTF-8'
+                ) . '</p>';
+                continue;
+            }
+
+            if (preg_match('/^(?:\d+\.\s+)?Kapitel\b/iu', $line) || preg_match('/^Szene\b/iu', $line)) {
+                $html[] = '<h2>' . htmlspecialchars($line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</h2>';
+                continue;
+            }
+
+            $html[] = '<p>' . htmlspecialchars($line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</p>';
+        }
+
+        return implode("\n", $html);
+    }
+
     private function renderMarkdownToHtml(string $markdown): string
     {
+        if ($this->shouldRenderAsProse($markdown)) {
+            return $this->renderProseToHtml($markdown);
+        }
+
         $environment = new Environment([
             // Sicherheit: kein HTML aus Markdown übernehmen
             'html_input' => 'strip',
