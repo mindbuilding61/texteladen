@@ -1,6 +1,8 @@
 {
+    "name": "mindbuilding61/erechnung",
+    "description": "E-Rechnung (XRechnung / ZUGFeRD) empfangen und erstellen – schlanke Web-App für Kleinunternehmer nach § 19 UStG.",
     "type": "project",
-    "license": "proprietary",
+    "license": "MIT",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {

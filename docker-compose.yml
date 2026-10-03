@@ -1,0 +1,30 @@
+services:
+  erechnung:
+    build: .
+    image: erechnung:latest
+    container_name: erechnung
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      APP_ENV: prod
+      APP_DEBUG: "0"
+      APP_SECRET: "${APP_SECRET:-change-me-to-a-long-random-string}"
+      DATABASE_URL: "sqlite:////var/www/app/var/data_prod.db"
+      MAILER_DSN: "${MAILER_DSN:-null://null}"
+      TRUSTED_PROXIES: "${TRUSTED_PROXIES:-127.0.0.1,REMOTE_ADDR}"
+      TRUSTED_HOSTS: "${TRUSTED_HOSTS:-^.*$$}"
+      # Optional IMAP fetcher
+      IMAP_HOST: "${IMAP_HOST:-}"
+      IMAP_PORT: "${IMAP_PORT:-993}"
+      IMAP_ENCRYPTION: "${IMAP_ENCRYPTION:-ssl}"
+      IMAP_VALIDATE_CERT: "${IMAP_VALIDATE_CERT:-true}"
+      IMAP_USERNAME: "${IMAP_USERNAME:-}"
+      IMAP_PASSWORD: "${IMAP_PASSWORD:-}"
+      IMAP_FOLDER: "${IMAP_FOLDER:-INBOX}"
+      IMAP_MARK_SEEN: "${IMAP_MARK_SEEN:-true}"
+    volumes:
+      - erechnung_data:/var/www/app/var
+
+volumes:
+  erechnung_data:
