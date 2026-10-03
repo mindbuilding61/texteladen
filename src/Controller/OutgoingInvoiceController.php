@@ -7,10 +7,12 @@ namespace App\Controller;
 use App\Entity\OutgoingInvoice;
 use App\Entity\OutgoingInvoiceLine;
 use App\Form\OutgoingInvoiceType;
+use App\Form\SendInvoiceType;
 use App\Repository\OutgoingInvoiceRepository;
 use App\Repository\SettingsRepository;
 use App\Service\Create\XRechnungBuilder;
 use App\Service\Create\ZugferdPdfBuilder;
+use App\Service\Send\InvoiceMailer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -116,6 +118,72 @@ final class OutgoingInvoiceController extends AbstractController
         $response->headers->set('Content-Type', $mime);
         $response->headers->set('Content-Disposition', sprintf('attachment; filename="%s"', $filename));
         return $response;
+    }
+
+    #[Route('/{id}/senden', name: 'outgoing_send', requirements: ['id' => '\\d+'], methods: ['GET', 'POST'])]
+    public function send(
+        Request $request,
+        OutgoingInvoice $invoice,
+        SettingsRepository $settingsRepo,
+        InvoiceMailer $mailer,
+        EntityManagerInterface $em,
+    ): Response {
+        if ($invoice->getStatus() === OutgoingInvoice::STATUS_DRAFT) {
+            $this->addFlash('warning', 'Zuerst festschreiben, bevor sie verschickt wird.');
+            return $this->redirectToRoute('outgoing_show', ['id' => $invoice->getId()]);
+        }
+        $settings = $settingsRepo->getOrCreate();
+
+        $form = $this->createForm(SendInvoiceType::class, [
+            'to' => $invoice->getCustomer()?->getEmail() ?? '',
+            'subject' => sprintf('Rechnung %s von %s', $invoice->getInvoiceNumber(), $settings->getCompanyName()),
+            'body' => $this->defaultMailBody($invoice, $settings),
+            'attachments' => ['zugferd'],
+        ]);
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+            try {
+                $mailer->send(
+                    $invoice,
+                    $settings,
+                    (string) $data['to'],
+                    (string) $data['subject'],
+                    (string) $data['body'],
+                    $data['cc'] ?? null,
+                    $data['attachments'] ?? ['zugferd']
+                );
+                $invoice->setStatus(OutgoingInvoice::STATUS_SENT);
+                $em->flush();
+                $this->addFlash('success', 'Rechnung erfolgreich versendet.');
+                return $this->redirectToRoute('outgoing_show', ['id' => $invoice->getId()]);
+            } catch (\Throwable $e) {
+                $this->addFlash('error', 'Versand fehlgeschlagen: '.$e->getMessage());
+            }
+        }
+
+        return $this->render('outgoing/send.html.twig', [
+            'invoice' => $invoice,
+            'form' => $form,
+        ]);
+    }
+
+    private function defaultMailBody(OutgoingInvoice $invoice, \App\Entity\Settings $settings): string
+    {
+        $greeting = $invoice->getCustomer()?->getContactName()
+            ? 'Hallo '.$invoice->getCustomer()->getContactName().','
+            : 'Guten Tag,';
+        return <<<TXT
+            $greeting
+
+            anbei die Rechnung {$invoice->getInvoiceNumber()} über {$invoice->getTotalNet()} € (zahlbar bis {$invoice->getDueDate()->format('d.m.Y')}).
+
+            Die Rechnung liegt als ZUGFeRD-PDF/A-3 mit eingebettetem XRechnung-XML bei und erfüllt die EN 16931.
+
+            Freundliche Grüße
+            {$settings->getContactName()}
+            {$settings->getCompanyName()}
+            TXT;
     }
 
     #[Route('/{id}/loeschen', name: 'outgoing_delete', requirements: ['id' => '\\d+'], methods: ['POST'])]

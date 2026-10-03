@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+{% block title %}Rechnung {{ invoice.invoiceNumber }} versenden{% endblock %}
+{% block body %}
+    <h1 class="h3 mb-3">Rechnung {{ invoice.invoiceNumber }} per E-Mail versenden</h1>
+    <div class="card">
+        <div class="card-body">
+            {{ form_start(form) }}
+                <div class="row g-3">
+                    <div class="col-md-6">{{ form_row(form.to) }}</div>
+                    <div class="col-md-6">{{ form_row(form.cc) }}</div>
+                    <div class="col-12">{{ form_row(form.subject) }}</div>
+                    <div class="col-12">{{ form_row(form.body) }}</div>
+                    <div class="col-12">{{ form_row(form.attachments) }}</div>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                    <button class="btn btn-primary"><i class="bi bi-envelope-check"></i> Senden</button>
+                    <a href="{{ path('outgoing_show', {id: invoice.id}) }}" class="btn btn-outline-secondary">Abbrechen</a>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+    <p class="text-muted small mt-2">
+        SMTP-Konfiguration erfolgt über <code>MAILER_DSN</code> in <code>.env.local</code>.
+    </p>
+{% endblock %}

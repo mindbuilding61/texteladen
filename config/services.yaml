@@ -9,6 +9,11 @@
 parameters:
     app.storage_dir: '%kernel.project_dir%/var/invoice-storage'
     app.logo_dir: '%kernel.project_dir%/public/uploads/logo'
+    imap_port_default: 993
+    imap_encryption_default: 'ssl'
+    imap_validate_default: true
+    imap_folder_default: 'INBOX'
+    imap_mark_seen_default: true
 
 services:
     _defaults:
@@ -16,6 +21,14 @@ services:
         autoconfigure: true
         bind:
             string $storageDir: '%app.storage_dir%'
+            string $imapHost: '%env(default::IMAP_HOST)%'
+            int $imapPort: '%env(default:imap_port_default:int:IMAP_PORT)%'
+            string $imapEncryption: '%env(default:imap_encryption_default:IMAP_ENCRYPTION)%'
+            bool $imapValidateCert: '%env(default:imap_validate_default:bool:IMAP_VALIDATE_CERT)%'
+            string $imapUsername: '%env(default::IMAP_USERNAME)%'
+            string $imapPassword: '%env(default::IMAP_PASSWORD)%'
+            string $imapFolder: '%env(default:imap_folder_default:IMAP_FOLDER)%'
+            bool $imapMarkSeen: '%env(default:imap_mark_seen_default:bool:IMAP_MARK_SEEN)%'
 
     App\:
         resource: '../src/'

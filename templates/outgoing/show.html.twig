@@ -21,7 +21,8 @@
             {% else %}
                 <a href="{{ path('outgoing_export', {id: invoice.id, format: 'pdf'}) }}" class="btn btn-outline-secondary"><i class="bi bi-filetype-pdf"></i> PDF</a>
                 <a href="{{ path('outgoing_export', {id: invoice.id, format: 'xml'}) }}" class="btn btn-outline-secondary"><i class="bi bi-filetype-xml"></i> XRechnung XML</a>
-                <a href="{{ path('outgoing_export', {id: invoice.id, format: 'zugferd'}) }}" class="btn btn-primary"><i class="bi bi-file-earmark-pdf"></i> ZUGFeRD PDF/A-3</a>
+                <a href="{{ path('outgoing_export', {id: invoice.id, format: 'zugferd'}) }}" class="btn btn-outline-secondary"><i class="bi bi-file-earmark-pdf"></i> ZUGFeRD PDF/A-3</a>
+                <a href="{{ path('outgoing_send', {id: invoice.id}) }}" class="btn btn-primary"><i class="bi bi-envelope"></i> Per E-Mail senden</a>
             {% endif %}
         </div>
     </div>
