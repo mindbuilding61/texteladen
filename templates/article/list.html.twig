@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+{% block title %}Artikel{% endblock %}
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0">Artikel &amp; Leistungen</h1>
+        <a href="{{ path('article_new') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Neuer Artikel</a>
+    </div>
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr><th>SKU</th><th>Bezeichnung</th><th class="num">Einzelpreis</th><th>Einheit</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for a in articles %}
+                        <tr>
+                            <td class="mono">{{ a.sku }}</td>
+                            <td><a href="{{ path('article_edit', {id: a.id}) }}">{{ a.name }}</a></td>
+                            <td class="num">{{ a.unitPrice|number_format(2, ',', '.') }} €</td>
+                            <td>{{ a.unit }}</td>
+                            <td class="text-end">
+                                <form method="post" action="{{ path('article_delete', {id: a.id}) }}" class="d-inline" onsubmit="return confirm('Artikel löschen?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('article-delete-' ~ a.id) }}">
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="5" class="text-muted text-center py-4">Noch keine Artikel angelegt.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

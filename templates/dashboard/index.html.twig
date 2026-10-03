@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Übersicht · E-Rechnung{% endblock %}
+
+{% block body %}
+    {% if settings.companyName is empty %}
+        <div class="alert alert-warning d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <div class="flex-grow-1">
+                Du hast dein Unternehmen noch nicht konfiguriert. Ohne Firmendaten können keine XRechnungen erstellt werden.
+            </div>
+            <a href="{{ path('settings_edit') }}" class="btn btn-sm btn-warning">Jetzt einrichten</a>
+        </div>
+    {% endif %}
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="card p-3">
+                <div class="text-muted small">Offene Eingangsrechnungen</div>
+                <div class="h3 mb-0">{{ unpaidIncoming }}</div>
+                <a href="{{ path('incoming_list') }}" class="small text-decoration-none">zum Eingang →</a>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card p-3">
+                <div class="text-muted small">Offene Ausgangsrechnungen</div>
+                <div class="h3 mb-0">{{ openOutgoing }}</div>
+                <a href="{{ path('outgoing_list') }}" class="small text-decoration-none">zum Ausgang →</a>
+            </div>
+        </div>
+        <div class="col-md-12 col-xl-6">
+            <div class="card p-3 h-100 d-flex flex-row align-items-center">
+                <div class="flex-grow-1">
+                    <div class="fw-semibold">Neue Rechnung erstellen</div>
+                    <div class="text-muted small">Als Kleinunternehmer nach § 19 UStG – ohne USt-Ausweis.</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ path('incoming_upload') }}" class="btn btn-outline-secondary"><i class="bi bi-upload"></i> Eingang hochladen</a>
+                    <a href="{{ path('outgoing_new') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Rechnung schreiben</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-inbox"></i> Letzte Eingangsrechnungen</span>
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ path('incoming_list') }}">alle</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr><th>Nr.</th><th>Lieferant</th><th class="num">Brutto</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for inv in recentIncoming %}
+                            <tr>
+                                <td><a href="{{ path('incoming_show', {id: inv.id}) }}">{{ inv.invoiceNumber ?: '—' }}</a></td>
+                                <td class="text-truncate" style="max-width: 180px;">{{ inv.sellerName ?: inv.originalFilename }}</td>
+                                <td class="num">{{ inv.totalGross is not null ? (inv.totalGross|number_format(2, ',', '.')) ~ ' ' ~ (inv.currency ?: '') : '—' }}</td>
+                                <td><span class="badge text-bg-secondary status-badge">{{ inv.status }}</span></td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="4" class="text-muted text-center py-3">Noch keine Eingangsrechnungen.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-send"></i> Letzte Ausgangsrechnungen</span>
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ path('outgoing_list') }}">alle</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr><th>Nr.</th><th>Kunde</th><th class="num">Netto</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for inv in recentOutgoing %}
+                            <tr>
+                                <td><a href="{{ path('outgoing_show', {id: inv.id}) }}">{{ inv.invoiceNumber ?: '(Entwurf)' }}</a></td>
+                                <td class="text-truncate" style="max-width: 180px;">{{ inv.customer.name }}</td>
+                                <td class="num">{{ inv.totalNet|number_format(2, ',', '.') }} €</td>
+                                <td><span class="badge text-bg-secondary status-badge">{{ inv.status }}</span></td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="4" class="text-muted text-center py-3">Noch keine Ausgangsrechnungen.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

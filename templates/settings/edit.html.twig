@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+{% block title %}Einstellungen · E-Rechnung{% endblock %}
+{% block body %}
+    <h1 class="h3 mb-4">Einstellungen</h1>
+    <div class="card">
+        <div class="card-body">
+            {{ form_start(form) }}
+                <div class="row g-3">
+                    <div class="col-md-8"><h5>Unternehmen</h5></div>
+                    <div class="col-md-8">{{ form_row(form.companyName) }}</div>
+                    <div class="col-md-8">{{ form_row(form.contactName) }}</div>
+                    <div class="col-md-8">{{ form_row(form.street) }}</div>
+                    <div class="col-md-3">{{ form_row(form.postalCode) }}</div>
+                    <div class="col-md-5">{{ form_row(form.city) }}</div>
+                    <div class="col-md-2">{{ form_row(form.country) }}</div>
+                    <div class="col-md-6">{{ form_row(form.email) }}</div>
+                    <div class="col-md-6">{{ form_row(form.phone) }}</div>
+                    <div class="col-md-6">{{ form_row(form.taxNumber) }}</div>
+                    <div class="col-md-6">{{ form_row(form.vatId) }}</div>
+
+                    <div class="col-12 mt-4"><h5>Bankverbindung</h5></div>
+                    <div class="col-md-6">{{ form_row(form.iban) }}</div>
+                    <div class="col-md-6">{{ form_row(form.bic) }}</div>
+                    <div class="col-md-8">{{ form_row(form.bankName) }}</div>
+
+                    <div class="col-12 mt-4"><h5>Steuerliche Angaben</h5></div>
+                    <div class="col-12">{{ form_row(form.kleinunternehmer) }}</div>
+                    <div class="col-12">{{ form_row(form.kleinunternehmerNote) }}</div>
+
+                    <div class="col-12 mt-4"><h5>Rechnungs-Standards</h5></div>
+                    <div class="col-md-3">{{ form_row(form.invoiceNumberPrefix) }}</div>
+                    <div class="col-md-3">{{ form_row(form.nextInvoiceNumber) }}</div>
+                    <div class="col-md-3">{{ form_row(form.defaultPaymentTermDays) }}</div>
+                </div>
+                <div class="mt-4">
+                    <button class="btn btn-primary">Speichern</button>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+{% endblock %}

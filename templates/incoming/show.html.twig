@@ -1,0 +1,120 @@
+{% extends 'base.html.twig' %}
+{% block title %}Eingangsrechnung {{ invoice.invoiceNumber }}{% endblock %}
+{% block body %}
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <h1 class="h3 mb-1">Rechnung {{ invoice.invoiceNumber ?: '—' }}</h1>
+            <div class="text-muted">
+                {{ invoice.formatLabel }}
+                {% if invoice.profile %}<span class="mono small">· {{ invoice.profile }}</span>{% endif %}
+                · empfangen {{ invoice.receivedAt|date('d.m.Y H:i') }}
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ path('incoming_download', {id: invoice.id, kind: 'original'}) }}" class="btn btn-outline-secondary"><i class="bi bi-download"></i> Original</a>
+            {% if invoice.xmlStorageKey %}
+                <a href="{{ path('incoming_download', {id: invoice.id, kind: 'xml'}) }}" class="btn btn-outline-secondary"><i class="bi bi-filetype-xml"></i> XML</a>
+            {% endif %}
+            {% if invoice.pdfStorageKey %}
+                <a href="{{ path('incoming_download', {id: invoice.id, kind: 'pdf'}) }}" class="btn btn-outline-secondary"><i class="bi bi-filetype-pdf"></i> PDF</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if invoice.validationErrors %}
+        <div class="alert alert-warning">
+            <strong>Hinweise beim Verarbeiten:</strong>
+            <ul class="mb-0">{% for e in invoice.validationErrors %}<li>{{ e }}</li>{% endfor %}</ul>
+        </div>
+    {% endif %}
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">Lieferant</div>
+                <div class="card-body">
+                    <div class="fw-semibold">{{ invoice.sellerName ?: '—' }}</div>
+                    {% if invoice.parsedData.seller.address %}
+                        <pre class="mb-2 small">{{ invoice.parsedData.seller.address }}</pre>
+                    {% endif %}
+                    <div class="small text-muted">USt-IdNr.: <span class="mono">{{ invoice.sellerVatId ?: '—' }}</span></div>
+                    <div class="small text-muted">IBAN: <span class="mono">{{ invoice.sellerIban ?: '—' }}</span></div>
+                    {% if invoice.parsedData.seller.bic %}<div class="small text-muted">BIC: <span class="mono">{{ invoice.parsedData.seller.bic }}</span></div>{% endif %}
+                    {% if invoice.parsedData.seller.email %}<div class="small text-muted">E-Mail: {{ invoice.parsedData.seller.email }}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">Kennzahlen</div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr><th>Rechnungsnummer</th><td class="mono">{{ invoice.invoiceNumber ?: '—' }}</td></tr>
+                        <tr><th>Rechnungsdatum</th><td>{{ invoice.issueDate ? invoice.issueDate|date('d.m.Y') : '—' }}</td></tr>
+                        <tr><th>Fälligkeit</th><td>{{ invoice.dueDate ? invoice.dueDate|date('d.m.Y') : '—' }}</td></tr>
+                        {% if invoice.parsedData.periodStart or invoice.parsedData.periodEnd %}
+                            <tr><th>Leistungszeitraum</th><td>{{ invoice.parsedData.periodStart }} – {{ invoice.parsedData.periodEnd }}</td></tr>
+                        {% endif %}
+                        <tr><th>Netto</th><td class="num mono">{{ invoice.totalNet ? (invoice.totalNet|number_format(2, ',', '.')) : '—' }}</td></tr>
+                        <tr><th>USt</th><td class="num mono">{{ invoice.totalTax ? (invoice.totalTax|number_format(2, ',', '.')) : '—' }}</td></tr>
+                        <tr><th>Brutto</th><td class="num mono"><strong>{{ invoice.totalGross ? (invoice.totalGross|number_format(2, ',', '.')) ~ ' ' ~ invoice.currency : '—' }}</strong></td></tr>
+                        <tr><th>Zu zahlen</th><td class="num mono">{{ invoice.amountDue ? (invoice.amountDue|number_format(2, ',', '.')) ~ ' ' ~ invoice.currency : '—' }}</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if invoice.parsedData.lines is defined and invoice.parsedData.lines|length > 0 %}
+        <div class="card mb-3">
+            <div class="card-header">Positionen</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead class="table-light">
+                        <tr><th>#</th><th>Bezeichnung</th><th class="num">Menge</th><th>Einheit</th><th class="num">Einzelpreis</th><th class="num">Zwischensumme</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for line in invoice.parsedData.lines %}
+                        <tr>
+                            <td>{{ line.lineId }}</td>
+                            <td>
+                                <div>{{ line.name }}</div>
+                                {% if line.description %}<div class="small text-muted">{{ line.description }}</div>{% endif %}
+                            </td>
+                            <td class="num mono">{{ line.quantity }}</td>
+                            <td>{{ line.unit }}</td>
+                            <td class="num mono">{{ line.unitPrice }}</td>
+                            <td class="num mono">{{ line.lineNet }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="d-flex gap-2 mb-4">
+        {% for s, label in {'reviewed': 'Als geprüft markieren', 'paid': 'Als bezahlt markieren', 'disputed': 'Beanstanden', 'new': 'Zurück auf "neu"'} %}
+            {% if invoice.status != s %}
+                <form method="post" action="{{ path('incoming_set_status', {id: invoice.id, status: s}) }}" class="d-inline">
+                    <input type="hidden" name="_token" value="{{ csrf_token('incoming-status-' ~ invoice.id) }}">
+                    <button class="btn btn-sm btn-outline-primary">{{ label }}</button>
+                </form>
+            {% endif %}
+        {% endfor %}
+        <form method="post" action="{{ path('incoming_delete', {id: invoice.id}) }}" class="ms-auto" onsubmit="return confirm('Diese Rechnung wirklich löschen? Die Originaldatei bleibt im GoBD-Archiv erhalten.');">
+            <input type="hidden" name="_token" value="{{ csrf_token('incoming-delete-' ~ invoice.id) }}">
+            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Löschen</button>
+        </form>
+    </div>
+
+    {% if xml %}
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Rohes XML</span>
+                <span class="small text-muted">SHA-256: <span class="mono">{{ invoice.sha256 }}</span></span>
+            </div>
+            <pre class="xml mb-0">{{ xml }}</pre>
+        </div>
+    {% endif %}
+{% endblock %}

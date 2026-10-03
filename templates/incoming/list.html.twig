@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+{% block title %}Rechnungseingang{% endblock %}
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0">Rechnungseingang</h1>
+        <a href="{{ path('incoming_upload') }}" class="btn btn-primary"><i class="bi bi-upload"></i> Rechnung hochladen</a>
+    </div>
+
+    <div class="btn-group mb-3" role="group">
+        <a href="{{ path('incoming_list') }}" class="btn btn-sm btn-outline-secondary {{ status is null ? 'active' }}">Alle</a>
+        <a href="{{ path('incoming_list', {status: 'new'}) }}" class="btn btn-sm btn-outline-secondary {{ status == 'new' ? 'active' }}">Neu</a>
+        <a href="{{ path('incoming_list', {status: 'reviewed'}) }}" class="btn btn-sm btn-outline-secondary {{ status == 'reviewed' ? 'active' }}">Geprüft</a>
+        <a href="{{ path('incoming_list', {status: 'paid'}) }}" class="btn btn-sm btn-outline-secondary {{ status == 'paid' ? 'active' }}">Bezahlt</a>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Empfangen</th>
+                        <th>Rechnungs-Nr.</th>
+                        <th>Lieferant</th>
+                        <th>Format</th>
+                        <th>Fällig</th>
+                        <th class="num">Brutto</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoices %}
+                        <tr>
+                            <td class="text-muted small">{{ inv.receivedAt|date('d.m.Y H:i') }}</td>
+                            <td><a href="{{ path('incoming_show', {id: inv.id}) }}">{{ inv.invoiceNumber ?: '—' }}</a></td>
+                            <td>
+                                <div>{{ inv.sellerName ?: inv.originalFilename }}</div>
+                                {% if inv.sellerVatId %}<div class="text-muted small mono">{{ inv.sellerVatId }}</div>{% endif %}
+                            </td>
+                            <td><span class="badge text-bg-light">{{ inv.formatLabel }}</span>
+                                {% if not inv.validationPassed %}
+                                    <span class="badge text-bg-warning" title="{{ (inv.validationErrors ?: [])|join(' · ') }}"><i class="bi bi-exclamation-triangle"></i></span>
+                                {% endif %}
+                            </td>
+                            <td>{{ inv.dueDate ? inv.dueDate|date('d.m.Y') : '—' }}</td>
+                            <td class="num">{{ inv.totalGross is not null ? (inv.totalGross|number_format(2, ',', '.')) ~ ' ' ~ (inv.currency ?: '') : '—' }}</td>
+                            <td>
+                                {% set statusClass = {
+                                    'new': 'text-bg-primary',
+                                    'reviewed': 'text-bg-info',
+                                    'paid': 'text-bg-success',
+                                    'disputed': 'text-bg-danger',
+                                }[inv.status] ?? 'text-bg-secondary' %}
+                                <span class="badge {{ statusClass }} status-badge">{{ inv.status }}</span>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="7" class="text-muted text-center py-4">Keine Rechnungen vorhanden.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

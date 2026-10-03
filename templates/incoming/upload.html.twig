@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+{% block title %}Rechnung hochladen{% endblock %}
+{% block body %}
+    <h1 class="h3 mb-3">Rechnung hochladen</h1>
+    <div class="card">
+        <div class="card-body">
+            <p class="text-muted">
+                Lade eine oder mehrere Dateien hoch. Unterstützt werden:
+                <br><strong>XRechnung</strong> (UBL oder CII, .xml), <strong>ZUGFeRD</strong> / <strong>Factur-X</strong> (hybrides PDF/A-3 mit eingebettetem CII-XML).
+            </p>
+            <form method="post" action="{{ path('incoming_upload') }}" enctype="multipart/form-data">
+                <input type="hidden" name="_token" value="{{ csrf_token('incoming-upload') }}">
+                <div class="mb-3">
+                    <input type="file" name="files[]" multiple required class="form-control" accept=".xml,.pdf,application/xml,text/xml,application/pdf">
+                    <div class="form-text">Du kannst mehrere Dateien gleichzeitig auswählen.</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary"><i class="bi bi-upload"></i> Hochladen &amp; verarbeiten</button>
+                    <a href="{{ path('incoming_list') }}" class="btn btn-outline-secondary">Abbrechen</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-4 small text-muted">
+        <strong>Hinweis zur Aufbewahrung:</strong> Hochgeladene Originaldateien werden unverändert im GoBD-Archiv (<code>var/invoice-storage/&lt;Jahr&gt;/&lt;Monat&gt;/…</code>) gespeichert und mit SHA-256 verifiziert.
+    </div>
+{% endblock %}
