@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+{% block title %}Rechnungsausgang{% endblock %}
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0">Rechnungsausgang</h1>
+        <a href="{{ path('outgoing_new') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Neue Rechnung</a>
+    </div>
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr><th>Nr.</th><th>Datum</th><th>Kunde</th><th class="num">Netto</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoices %}
+                        <tr>
+                            <td class="mono">
+                                <a href="{{ path('outgoing_show', {id: inv.id}) }}">{{ inv.invoiceNumber ?: '(Entwurf)' }}</a>
+                            </td>
+                            <td>{{ inv.issueDate|date('d.m.Y') }}</td>
+                            <td>{{ inv.customer.name }}</td>
+                            <td class="num">{{ inv.totalNet|number_format(2, ',', '.') }} €</td>
+                            <td>
+                                {% set statusClass = {
+                                    'draft': 'text-bg-secondary',
+                                    'issued': 'text-bg-primary',
+                                    'sent': 'text-bg-info',
+                                    'paid': 'text-bg-success',
+                                    'cancelled': 'text-bg-danger',
+                                }[inv.status] ?? 'text-bg-secondary' %}
+                                <span class="badge {{ statusClass }} status-badge">{{ inv.status }}</span>
+                            </td>
+                            <td class="text-end">
+                                {% if inv.status != 'draft' %}
+                                    <a href="{{ path('outgoing_export', {id: inv.id, format: 'xml'}) }}" class="btn btn-sm btn-outline-secondary" title="XRechnung XML herunterladen"><i class="bi bi-filetype-xml"></i></a>
+                                    <a href="{{ path('outgoing_export', {id: inv.id, format: 'zugferd'}) }}" class="btn btn-sm btn-outline-secondary" title="ZUGFeRD PDF/A-3 herunterladen"><i class="bi bi-filetype-pdf"></i></a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="6" class="text-muted text-center py-4">Noch keine Rechnungen erstellt.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

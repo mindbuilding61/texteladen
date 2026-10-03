@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rechnung {{ invoice.invoiceNumber }}</title>
+    <style>
+        @page { margin: 20mm 18mm 25mm 18mm; }
+        body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; color: #222; }
+        h1 { font-size: 20pt; margin: 0 0 2mm 0; }
+        .right { text-align: right; }
+        .muted { color: #666; }
+        .small { font-size: 8.5pt; }
+        .mt-4 { margin-top: 10mm; }
+        .mt-2 { margin-top: 5mm; }
+        .mt-1 { margin-top: 2mm; }
+        .header { width: 100%; }
+        .header td { vertical-align: top; }
+        .seller { font-size: 8pt; color: #555; border-bottom: .5pt solid #999; padding-bottom: 2mm; margin-bottom: 2mm; }
+        .buyer { margin-top: 25mm; }
+        .meta { margin-top: 15mm; width: 100%; border-collapse: collapse; }
+        .meta td { padding: 1mm 2mm; }
+        .meta td.label { color: #666; width: 32mm; }
+        table.items { width: 100%; border-collapse: collapse; margin-top: 8mm; }
+        table.items th { background: #efefef; text-align: left; padding: 2mm; font-size: 9pt; border-bottom: .5pt solid #999; }
+        table.items td { padding: 2mm; vertical-align: top; border-bottom: .25pt solid #ddd; }
+        table.items td.num { text-align: right; white-space: nowrap; }
+        .totals { margin-top: 5mm; width: 72mm; margin-left: auto; }
+        .totals td { padding: 1.5mm 2mm; }
+        .totals tr.grand td { border-top: .5pt solid #333; font-weight: bold; font-size: 11pt; }
+        .notes { margin-top: 10mm; }
+        .footer { position: fixed; bottom: -10mm; left: 0; right: 0; font-size: 8pt; color: #666; border-top: .3pt solid #ccc; padding-top: 2mm; }
+        .exempt { margin-top: 6mm; padding: 3mm; background: #fff6dd; border: .3pt solid #e2b000; font-size: 9pt; }
+    </style>
+</head>
+<body>
+    <table class="header">
+        <tr>
+            <td style="width: 60%">
+                <div class="seller">{{ settings.companyName }} · {{ settings.street }} · {{ settings.postalCode }} {{ settings.city }}</div>
+                <div class="buyer">
+                    <strong>{{ invoice.customer.name }}</strong><br>
+                    {% if invoice.customer.contactName %}{{ invoice.customer.contactName }}<br>{% endif %}
+                    {{ invoice.customer.street }}<br>
+                    {{ invoice.customer.postalCode }} {{ invoice.customer.city }}
+                </div>
+            </td>
+            <td style="width: 40%" class="right small">
+                <strong>{{ settings.companyName }}</strong><br>
+                {% if settings.contactName %}{{ settings.contactName }}<br>{% endif %}
+                {{ settings.street }}<br>
+                {{ settings.postalCode }} {{ settings.city }}<br>
+                {% if settings.email %}{{ settings.email }}<br>{% endif %}
+                {% if settings.phone %}{{ settings.phone }}<br>{% endif %}
+                {% if settings.taxNumber %}Steuernr.: {{ settings.taxNumber }}<br>{% endif %}
+                {% if settings.vatId %}USt-IdNr.: {{ settings.vatId }}<br>{% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <h1 class="mt-4">Rechnung {{ invoice.invoiceNumber ?: '(Entwurf)' }}</h1>
+
+    <table class="meta">
+        <tr>
+            <td class="label">Rechnungsdatum</td>
+            <td>{{ invoice.issueDate|date('d.m.Y') }}</td>
+            <td class="label">Fällig am</td>
+            <td>{{ invoice.dueDate|date('d.m.Y') }}</td>
+        </tr>
+        {% if invoice.servicePeriodStart and invoice.servicePeriodEnd %}
+            <tr>
+                <td class="label">Leistungszeitraum</td>
+                <td colspan="3">{{ invoice.servicePeriodStart|date('d.m.Y') }} – {{ invoice.servicePeriodEnd|date('d.m.Y') }}</td>
+            </tr>
+        {% endif %}
+        {% if invoice.buyerReference %}
+            <tr><td class="label">Buyer Reference</td><td colspan="3">{{ invoice.buyerReference }}</td></tr>
+        {% endif %}
+        {% if invoice.leitwegId %}
+            <tr><td class="label">Leitweg-ID</td><td colspan="3">{{ invoice.leitwegId }}</td></tr>
+        {% endif %}
+    </table>
+
+    {% if invoice.introText %}
+        <p class="mt-2">{{ invoice.introText|nl2br }}</p>
+    {% endif %}
+
+    <table class="items">
+        <thead>
+            <tr>
+                <th style="width:8%">Pos.</th>
+                <th>Bezeichnung</th>
+                <th class="num" style="width:12%">Menge</th>
+                <th style="width:10%">Einheit</th>
+                <th class="num" style="width:16%">Einzelpreis</th>
+                <th class="num" style="width:18%">Betrag</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in invoice.lines %}
+                <tr>
+                    <td>{{ line.position }}</td>
+                    <td>
+                        <strong>{{ line.name }}</strong>
+                        {% if line.description %}<div class="small muted">{{ line.description|nl2br }}</div>{% endif %}
+                    </td>
+                    <td class="num">{{ line.quantity|number_format(2, ',', '.') }}</td>
+                    <td>{{ line.unit }}</td>
+                    <td class="num">{{ line.unitPrice|number_format(2, ',', '.') }} €</td>
+                    <td class="num">{{ line.lineNet|number_format(2, ',', '.') }} €</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table class="totals">
+        {% if not settings.kleinunternehmer %}
+            <tr><td>Netto</td><td class="num">{{ invoice.totalNet|number_format(2, ',', '.') }} €</td></tr>
+            <tr><td>zzgl. USt</td><td class="num">—</td></tr>
+        {% endif %}
+        <tr class="grand"><td>Gesamtbetrag</td><td class="num">{{ invoice.totalNet|number_format(2, ',', '.') }} €</td></tr>
+    </table>
+
+    {% if settings.kleinunternehmer %}
+        <div class="exempt">
+            {{ settings.kleinunternehmerNote }}
+        </div>
+    {% endif %}
+
+    {% if invoice.outroText %}
+        <p class="mt-2">{{ invoice.outroText|nl2br }}</p>
+    {% endif %}
+
+    <div class="notes small muted mt-2">
+        <strong>Zahlung</strong><br>
+        Bitte überweise {{ invoice.totalNet|number_format(2, ',', '.') }} € bis zum {{ invoice.dueDate|date('d.m.Y') }} auf folgendes Konto:<br>
+        {% if settings.iban %}IBAN: {{ settings.iban }}{% if settings.bic %} · BIC: {{ settings.bic }}{% endif %}{% endif %}
+        {% if settings.bankName %} · {{ settings.bankName }}{% endif %}<br>
+        Verwendungszweck: {{ invoice.invoiceNumber }}
+    </div>
+
+    <div class="footer">
+        {{ settings.companyName }} · {{ settings.street }} · {{ settings.postalCode }} {{ settings.city }}
+        {% if settings.iban %} · {{ settings.iban }}{% endif %}
+        {% if settings.taxNumber %} · Steuernr. {{ settings.taxNumber }}{% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,74 @@
+{% extends 'base.html.twig' %}
+{% block title %}Rechnung {{ invoice.invoiceNumber ?: '(Entwurf)' }}{% endblock %}
+{% block body %}
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <h1 class="h3 mb-1">Rechnung {{ invoice.invoiceNumber ?: '(Entwurf)' }}</h1>
+            <div class="text-muted">
+                Kunde: <strong>{{ invoice.customer.name }}</strong> ·
+                Datum: {{ invoice.issueDate|date('d.m.Y') }} ·
+                Fällig: {{ invoice.dueDate|date('d.m.Y') }} ·
+                <span class="badge text-bg-secondary">{{ invoice.status }}</span>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            {% if invoice.status == 'draft' %}
+                <a href="{{ path('outgoing_edit', {id: invoice.id}) }}" class="btn btn-outline-secondary"><i class="bi bi-pencil"></i> Bearbeiten</a>
+                <form method="post" action="{{ path('outgoing_issue', {id: invoice.id}) }}" class="d-inline" onsubmit="return confirm('Rechnung endgültig festschreiben? Danach ist sie nicht mehr editierbar (GoBD).');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('outgoing-issue-' ~ invoice.id) }}">
+                    <button class="btn btn-primary"><i class="bi bi-check-circle"></i> Festschreiben</button>
+                </form>
+            {% else %}
+                <a href="{{ path('outgoing_export', {id: invoice.id, format: 'pdf'}) }}" class="btn btn-outline-secondary"><i class="bi bi-filetype-pdf"></i> PDF</a>
+                <a href="{{ path('outgoing_export', {id: invoice.id, format: 'xml'}) }}" class="btn btn-outline-secondary"><i class="bi bi-filetype-xml"></i> XRechnung XML</a>
+                <a href="{{ path('outgoing_export', {id: invoice.id, format: 'zugferd'}) }}" class="btn btn-primary"><i class="bi bi-file-earmark-pdf"></i> ZUGFeRD PDF/A-3</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr><th>Pos.</th><th>Bezeichnung</th><th class="num">Menge</th><th>Einheit</th><th class="num">Einzelpreis</th><th class="num">Betrag</th></tr>
+                </thead>
+                <tbody>
+                {% for line in invoice.lines %}
+                    <tr>
+                        <td>{{ line.position }}</td>
+                        <td>
+                            <div>{{ line.name }}</div>
+                            {% if line.description %}<div class="small text-muted">{{ line.description }}</div>{% endif %}
+                        </td>
+                        <td class="num">{{ line.quantity|number_format(2, ',', '.') }}</td>
+                        <td>{{ line.unit }}</td>
+                        <td class="num">{{ line.unitPrice|number_format(2, ',', '.') }} €</td>
+                        <td class="num">{{ line.lineNet|number_format(2, ',', '.') }} €</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr><th colspan="5" class="num">Gesamtbetrag</th><th class="num">{{ invoice.totalNet|number_format(2, ',', '.') }} €</th></tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        {% if invoice.status == 'draft' %}
+            <form method="post" action="{{ path('outgoing_delete', {id: invoice.id}) }}" onsubmit="return confirm('Entwurf löschen?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('outgoing-delete-' ~ invoice.id) }}">
+                <button class="btn btn-outline-danger"><i class="bi bi-trash"></i> Entwurf löschen</button>
+            </form>
+        {% else %}
+            {% for s, label in {'sent': 'Als versandt markieren', 'paid': 'Als bezahlt markieren', 'cancelled': 'Stornieren'} %}
+                {% if invoice.status != s %}
+                    <form method="post" action="{{ path('outgoing_set_status', {id: invoice.id, status: s}) }}" class="d-inline">
+                        <input type="hidden" name="_token" value="{{ csrf_token('outgoing-status-' ~ invoice.id) }}">
+                        <button class="btn btn-sm btn-outline-primary">{{ label }}</button>
+                    </form>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+{% endblock %}
