@@ -8,13 +8,14 @@ ENV APP_ENV=prod \
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        git unzip ca-certificates libxml2 libpng16-16 libzip4 libonig5 libicu72 libjpeg62-turbo \
-        libxml2-dev libzip-dev libicu-dev libpng-dev libjpeg-dev libonig-dev \
+        git unzip ca-certificates \
+        libxml2 libpng16-16 libzip4 libonig5 libicu72 libjpeg62-turbo libsqlite3-0 \
+        libxml2-dev libzip-dev libicu-dev libpng-dev libjpeg-dev libonig-dev libsqlite3-dev \
     && docker-php-ext-configure gd --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" bcmath intl zip gd pdo_mysql pdo_sqlite \
     && pecl install apcu \
     && docker-php-ext-enable apcu opcache \
-    && apt-get purge -y libxml2-dev libzip-dev libicu-dev libpng-dev libjpeg-dev libonig-dev \
+    && apt-get purge -y libxml2-dev libzip-dev libicu-dev libpng-dev libjpeg-dev libonig-dev libsqlite3-dev \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
