@@ -4,7 +4,6 @@ set -euo pipefail
 cd /var/www/app
 
 mkdir -p var/invoice-storage var/cache var/log public/assets
-chown -R www-data:www-data var public/assets
 
 if [ -z "${APP_SECRET:-}" ]; then
     echo "WARNING: APP_SECRET env var is empty. Generating ephemeral secret."
@@ -20,5 +19,9 @@ fi
 
 php bin/console cache:clear --no-interaction
 php bin/console cache:warmup --no-interaction
+
+# chown *after* migrations and cache warm so the files that root just created
+# (DB, cache, logs) are handed over to the apache www-data worker.
+chown -R www-data:www-data var public/assets
 
 exec "$@"
